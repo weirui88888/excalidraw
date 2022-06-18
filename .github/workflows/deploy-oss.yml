@@ -1,0 +1,40 @@
+name: Deploy Excalidraw To Oss
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy: #job1 通过outpus共享变量给其下游的作业使用
+    name: Deploy Excalidraw
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.7.0
+        with:
+          access_token: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+
+      - name: Setup Node 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install Dependencies & Build
+        run: |
+          rm -rf build
+          npm install
+          npm run build
+          ls build
+
+      - name: Upload Files To OSS
+        uses: fangbinwei/aliyun-oss-website-action@v1
+        with:
+          accessKeyId: ${{ secrets.ALI_ACCESS_KEY_ID }}
+          accessKeySecret: ${{ secrets.ALI_ACCESS_KEY_SECRET }}
+          bucket: excalidraw-web
+          endpoint: oss-cn-hangzhou.aliyuncs.com
+          folder: build
